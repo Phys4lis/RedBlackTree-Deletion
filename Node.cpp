@@ -51,6 +51,15 @@ Node* Node::getUncle() {
   return NULL;
 }
 
+Node* Node::getSibling() {
+  if (this == this->getParent()->getLeft()) {
+    return this->getParent()->getRight();
+  }
+  else {
+    return this->getParent()->getLeft();
+  }
+}
+
 char Node::getColor() {
   return color;
 }

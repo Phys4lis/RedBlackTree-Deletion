@@ -6,12 +6,15 @@
 using namespace std;
 void add(Node* &treeRoot, Node* current, Node* newNode);
 void fixTree(Node* &treeRoot, Node* newNode);
-void print(Node* treeRoot, int level);
 void case3(Node* &treeRoot, Node* newNode);
 void case4(Node* &treeRoot, Node* &newNode);
 void case5(Node* &treeRoot, Node* newNode);
+void print(Node* treeRoot, int level);
 void search(Node* treeRoot, int value, bool &contained);
-void remove(Node* &treeRoot, Node* current, Node* parent, int direction, int value);
+void remove(Node* &treeRoot, Node* current, int value);
+void leftRotation(Node* &treeRoot, Node* newNode);
+void rightRotation(Node* &treeRoot, Node* newNode);
+Node* replacement(Node* newNode);
 int correctInput();
 
 
@@ -97,8 +100,7 @@ int main() {
       int value;
       cin >> value;
       cin.get();
-      int direction;
-      remove(treeRoot, treeRoot, treeRoot, direction, value);
+      remove(treeRoot, treeRoot, value);
     }
     // Quit the program
     else if (option == 5) {
@@ -189,6 +191,49 @@ void fixTree(Node* &treeRoot, Node* newNode) {
   }
 }
 
+void case3(Node* &treeRoot, Node* newNode) {
+  // Change colors
+  newNode->getParent()->setColor('B');
+  newNode->getUncle()->setColor('B');
+  newNode->getParent()->getParent()->setColor('R');
+  // Recall on grandparent
+  fixTree(treeRoot, newNode->getParent()->getParent());
+}
+
+void case4(Node* &treeRoot, Node* &newNode) {
+  // Parent is left and node is right
+  if (newNode->getParent()->getParent()->getLeft() == newNode->getParent() && newNode->getParent()->getRight() == newNode) {
+    // Left rotation
+    leftRotation(treeRoot, newNode->getParent());
+    newNode = newNode->getLeft();
+    case5(treeRoot, newNode);
+  }
+  //Parent is right and node is left
+  else if (newNode->getParent()->getParent()->getRight() == newNode->getParent() && newNode->getParent()->getLeft() == newNode) {
+    // Right rotation
+    rightRotation(treeRoot, newNode->getParent());
+    newNode = newNode->getRight();
+    case5(treeRoot, newNode);
+  }
+}
+
+void case5(Node* &treeRoot, Node* newNode) {
+  // Parent is left and node is left
+  if (newNode->getParent()->getParent()->getLeft() == newNode->getParent() && newNode->getParent()->getLeft() == newNode) {
+    // Right rotation
+    rightRotation(treeRoot, newNode->getParent()->getParent());
+    newNode->getParent()->getParent()->setColor('R');
+    newNode->getParent()->setColor('B');
+  }
+  // Parent is right and node is right
+  else if (newNode->getParent()->getParent()->getRight() == newNode->getParent() && newNode->getParent()->getRight() == newNode) {
+    // Left Rotation
+    leftRotation(treeRoot, newNode->getParent()->getParent());
+    newNode->getParent()->getParent()->setColor('R');
+    newNode->getParent()->setColor('B');    
+  }
+}
+
 void print(Node* treeRoot, int level) {
   if (treeRoot == NULL) {
     cout << "The tree is empty!" << endl << endl;
@@ -210,148 +255,6 @@ void print(Node* treeRoot, int level) {
   }
 }
 
-void case3(Node* &treeRoot, Node* newNode) {
-  // Change colors
-  newNode->getParent()->setColor('B');
-  newNode->getUncle()->setColor('B');
-  newNode->getParent()->getParent()->setColor('R');
-  // Recall on grandparent
-  fixTree(treeRoot, newNode->getParent()->getParent());
-}
-
-void case4(Node* &treeRoot, Node* &newNode) {
-  // Parent is left and node is right
-  if (newNode->getParent()->getParent()->getLeft() == newNode->getParent() && newNode->getParent()->getRight() == newNode) {
-    // Change parents and children
-    Node* tempParent = newNode->getParent();
-    Node* tempLeft = newNode->getLeft();
-    newNode->getParent()->getParent()->setLeft(newNode);
-    newNode->setParent(newNode->getParent()->getParent());
-    newNode->setLeft(tempParent);
-    newNode->getLeft()->setParent(newNode);
-    // Set right node if it exists
-    if (tempLeft != NULL) {
-      tempParent->setRight(tempLeft);
-      tempParent->getRight()->setParent(newNode->getLeft());
-    }
-    else {
-      tempParent->setRight(NULL);
-    }
-    newNode = newNode->getLeft();
-    case5(treeRoot, newNode);
-  }
-  //Parent is right and node is left
-  else if (newNode->getParent()->getParent()->getRight() == newNode->getParent() && newNode->getParent()->getLeft() == newNode) {
-    // Change parents and children
-    Node* tempParent = newNode->getParent();
-    Node* tempRight = newNode->getRight();
-    newNode->getParent()->getParent()->setRight(newNode);
-    newNode->setParent(newNode->getParent()->getParent());
-    newNode->setRight(tempParent);
-    newNode->getRight()->setParent(newNode);
-    // Set left node if it exists
-    if (tempRight != NULL) {
-      tempParent->setLeft(tempRight);
-      tempParent->getLeft()->setParent(newNode->getRight());
-    }
-    else {
-      tempParent->setLeft(NULL);
-    }
-    newNode = newNode->getRight();
-    case5(treeRoot, newNode);
-  }
-}
-
-void case5(Node* &treeRoot, Node* newNode) {
-  // Parent is left and node is left
-  if (newNode->getParent()->getParent()->getLeft() == newNode->getParent() && newNode->getParent()->getLeft() == newNode) {
-    // Tree rotation
-    Node* tempGrandParent = newNode->getParent()->getParent();
-    Node* tempRight = newNode->getParent()->getRight();
-    // Treeroot case
-    if (tempGrandParent == treeRoot) {
-      // Change parents and children
-      treeRoot = newNode->getParent();
-      treeRoot->setParent(NULL);
-      treeRoot->setRight(tempGrandParent);
-      tempGrandParent->setParent(treeRoot);
-      tempGrandParent->setLeft(tempRight);
-      // If parent has a right node. set it as grandparent's child
-      if (tempRight != NULL) {
-	tempRight->setParent(tempGrandParent);
-      }
-      // Change colors
-      tempGrandParent->setColor('R');
-      treeRoot->setColor('B');
-    }
-    else {
-      // Grandparent is a right child
-      if (tempGrandParent->getParent()->getRight() == newNode->getParent()->getParent()) {
-	tempGrandParent->getParent()->setRight(newNode->getParent());
-	newNode->getParent()->setParent(tempGrandParent->getParent());
-      }
-      // Grandparent is a left child
-      else if (tempGrandParent->getParent()->getLeft() == newNode->getParent()->getParent()) {
-	tempGrandParent->getParent()->setLeft(newNode->getParent());
-	newNode->getParent()->setParent(tempGrandParent->getParent());
-      }
-      // Change parents and children
-      newNode->getParent()->setRight(tempGrandParent);
-      tempGrandParent->setParent(newNode->getParent());
-      tempGrandParent->setLeft(tempRight);
-      if (tempRight != NULL) {
-	tempRight->setParent(tempGrandParent);
-      }
-      // Change colors
-      tempGrandParent->setColor('R');
-      newNode->getParent()->setColor('B');
-    }
-  }
-  // Parent is right and node is right
-  else if (newNode->getParent()->getParent()->getRight() == newNode->getParent() && newNode->getParent()->getRight() == newNode) {
-    // Tree Rotation
-    Node* tempGrandParent = newNode->getParent()->getParent();
-    Node* tempLeft = newNode->getParent()->getLeft();
-    // Treeroot case
-    if (tempGrandParent == treeRoot) {
-      // Change parents and children
-      treeRoot = newNode->getParent();
-      treeRoot->setParent(NULL);
-      treeRoot->setLeft(tempGrandParent);
-      tempGrandParent->setParent(treeRoot);
-      tempGrandParent->setRight(tempLeft);
-      // If parent has a left node. set it as grandparent's child
-      if (tempLeft != NULL) {
-	tempLeft->setParent(tempGrandParent);
-      }
-      // Change colors
-      tempGrandParent->setColor('R');
-      treeRoot->setColor('B');
-    }
-    else {
-      // Grandparent is left child
-      if (tempGrandParent->getParent()->getLeft() == newNode->getParent()->getParent()) {
-	tempGrandParent->getParent()->setLeft(newNode->getParent());
-	newNode->getParent()->setParent(tempGrandParent->getParent());
-      }
-      // Grandparent is right child
-      else if (tempGrandParent->getParent()->getRight() == newNode->getParent()->getParent()) {
-	tempGrandParent->getParent()->setRight(newNode->getParent());
-	newNode->getParent()->setParent(tempGrandParent->getParent());
-      }
-      // Change parents and children
-      newNode->getParent()->setLeft(tempGrandParent);
-      tempGrandParent->setParent(newNode->getParent());
-      tempGrandParent->setRight(tempLeft);
-      if (tempLeft != NULL) {
-	tempLeft->setParent(tempGrandParent);
-      }
-      // Change colors
-      tempGrandParent->setColor('R');
-      newNode->getParent()->setColor('B');
-    }    
-  }
-}
 
 void search(Node* treeRoot, int value, bool &contained) {
   if (treeRoot == NULL) {
@@ -372,13 +275,44 @@ void search(Node* treeRoot, int value, bool &contained) {
   }
 }
 
-void remove(Node* &treeRoot, Node* current, Node* parent, int direction, int value) {
+void remove(Node* &treeRoot, Node* current, int value) {
   if (treeRoot == NULL) {
     cout << "The tree is empty!" << endl << endl;
     return;
   }
   else {
-    if (current->getNum() == value) {
+    // Value is greater than current, so search right in tree
+    if (current->getNum() < value) {
+      remove(treeRoot, current->getRight(), value);
+    }
+    // Value is smaller than current, so search left in tree
+    else if (current->getNum() > value) {
+      remove(treeRoot, current->getLeft(), value);
+    }
+    // Found value
+    else {
+      // No children
+      if (current->getLeft() == NULL && current->getRight() == NULL) {
+	if (current->getParent()->getLeft() == current) {
+	  current->getParent()->setLeft(NULL);
+	}
+	else {
+	  current->getParent()->setRight(NULL);
+	}
+	current == NULL;
+      }
+      // Two children
+      else if (current->getLeft() != NULL && current->getRight() != NULL) {
+	
+	
+      }
+      // One child
+      else {
+
+      }
+    }
+  }
+    /*if (current->getNum() == value) {
       // Case where node has no children
       if (current->getRight() == NULL && current->getLeft() == NULL) {	
 	if (current == treeRoot) {
@@ -475,6 +409,63 @@ void remove(Node* &treeRoot, Node* current, Node* parent, int direction, int val
 	  cout << endl << "This number is not contained within the tree" << endl << endl;
 	}
       }
-    }
+      }*/
+}
+
+// Rotations with help from Zayeed Saffat
+void leftRotation(Node* &treeRoot, Node* newNode) {
+  Node* tempRight = newNode->getRight();
+  newNode->setRight(tempRight->getLeft());
+  if (tempRight->getLeft() != NULL) {
+    tempRight->getLeft()->setParent(newNode);
   }
+  if (newNode == treeRoot) {
+    treeRoot = tempRight;
+  }
+  else if (newNode->getParent()->getLeft() == newNode) {
+    newNode->getParent()->setLeft(tempRight);
+    tempRight->setParent(newNode->getParent());
+  }
+  else if (newNode->getParent()->getRight() == newNode) {
+    newNode->getParent()->setRight(tempRight);
+    tempRight->setParent(newNode->getParent());
+  }
+  tempRight->setLeft(newNode);
+  newNode->setParent(tempRight);
+}
+
+void rightRotation(Node* &treeRoot, Node* newNode) {
+  Node* tempLeft = newNode->getLeft();
+  newNode->setLeft(tempLeft->getRight());
+  if (tempLeft->getRight() != NULL) {
+    tempLeft->getRight()->setParent(newNode);
+  }
+  if (newNode == treeRoot) {
+    treeRoot = tempLeft;
+  }
+  else if (newNode->getParent()->getRight() == newNode) {
+    newNode->getParent()->setRight(tempLeft);
+    tempLeft->setParent(newNode->getParent());
+  }
+  else if (newNode->getParent()->getLeft() == newNode) {
+    newNode->getParent()->setLeft(tempLeft);
+    tempLeft->setParent(newNode->getParent());
+  }
+  tempLeft->setRight(newNode);
+  newNode->setParent(tempLeft);
+}
+
+// May not work....fix next class
+Node* replacement(Node* newNode) {
+  Node* replacement = newNode->getRight();
+  while (replacement->getLeft() != NULL) {
+    replacement = replacement->getLeft();
+  }
+  if (replacement->getParent()->getRight() != replacement) {
+    replacement->getParent()->setLeft(NULL);
+  }
+  else {
+    replacement->getParent()->setRight(NULL);
+  }
+  return replacement;
 }

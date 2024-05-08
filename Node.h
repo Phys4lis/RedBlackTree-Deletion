@@ -17,6 +17,7 @@ class Node {
   Node* getRight();
   Node* getParent();
   Node* getUncle();
+  Node* getSibling();
   char getColor();
   int getNum();
   // Set the next node in the list
