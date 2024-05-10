@@ -14,7 +14,7 @@ void search(Node* treeRoot, int value, bool &contained);
 void remove(Node* &treeRoot, Node* current, int value);
 void leftRotation(Node* &treeRoot, Node* newNode);
 void rightRotation(Node* &treeRoot, Node* newNode);
-Node* replacement(Node* newNode);
+void replacement(Node* &newNode);
 int correctInput();
 
 
@@ -303,113 +303,53 @@ void remove(Node* &treeRoot, Node* current, int value) {
       }
       // Two children
       else if (current->getLeft() != NULL && current->getRight() != NULL) {
-	
-	
+	Node* replacement = current->getRight();
+	while (replacement->getLeft() != NULL) {
+	  replacement = replacement->getLeft();
+	}
+	if (replacement->getParent()->getRight() != replacement) {
+	  replacement->getParent()->setLeft(NULL);
+	}
+	else {
+	  replacement->getParent()->setRight(replacement->getRight());
+	}
+	current->setNum(replacement->getNum());
+	replacement = NULL;
       }
       // One child
       else {
-
-      }
-    }
-  }
-    /*if (current->getNum() == value) {
-      // Case where node has no children
-      if (current->getRight() == NULL && current->getLeft() == NULL) {	
-	if (current == treeRoot) {
-	  treeRoot = NULL;
+	// Deleted node is red
+	if (current->getColor() == 'R') {
+	  replacement(current);
+	  current->setColor('B');
 	}
-	// Set parent left/right to null
+	// Child is red
+	else if ((current->getLeft()->getColor() == 'R' && current->getLeft() != NULL) || (current->getRight()->getColor() == 'R' && current->getRight() != NULL)) {
+	  replacement(current);
+	}
+	// Double black
 	else {
-	  if (direction == 1) {
-	    parent->setRight(NULL);
-	  }
-	  else if (direction == 0) {
-	    parent->setLeft(NULL);
-	  }
-	  current = NULL;
-	}
-      }
-      // Case where node has two children
-      else if (current->getRight() != NULL && current->getLeft() != NULL) {
-	// Find the value to replace node
-	Node* replacement = current->getRight();
-	Node* replacementParent = current;
-	// If node's right child has left children, find leftmost child and fix tree
-	while (replacement->getLeft() != NULL) {
-	  replacementParent = replacement;
-	  replacement = replacement->getLeft();
-	}
-	if (current != replacementParent) {
-	  current->setNum(replacement->getNum());
-	  if (replacement->getRight() != NULL) {
-	    replacementParent->setLeft(replacement->getRight());
-	  }
-	  else {
-	    replacementParent->setLeft(NULL);
-	  }
-	}
-	else {
-	  current->setNum(replacement->getNum());
-	  current->setRight(current->getRight()->getRight());
-	}
-      }
-      // Case where node has one child
-      else if (current->getRight() != NULL || current->getLeft() != NULL) {
-	// If child is to the right
-	if (current->getRight() != NULL) {
-	  if (current == treeRoot) {
-	    treeRoot = current->getRight();
-	  }
-	  else {
-	    // Set parent's left/right
-	    if (direction == 1) {
-	      parent->setRight(current->getRight());
+	  replacement(current);
+	  // Case 2: Sibling is Red
+	  if (current->getSibling()->getColor() == 'R') {
+	    if (current->getParent()->getLeft() == current) {
+	      leftRotation(treeRoot, current->getParent());
 	    }
-	    else if (direction == 0) {
-	      parent->setLeft(current->getRight());
+	    else {
+	      rightRotation(treeRoot, current->getParent());
 	    }
+	    Node* tempNode = current->getParent();
+	    current->getParent()->setColor(current->getSibling()->getColor());
+	    current->getSibling()->setColor(tempNode->getColor());
+	    // NEED TO CALL CASE 3 HERE....IN OTHER WORDS, MAKE FUNCTIONS FOR CASES
 	  }
-	}
-	// If child is to the left
-	else if (current->getLeft() != NULL) {
-	  if (current == treeRoot) {
-	    treeRoot = current->getLeft();
-	  }
-	  else {
-	    // Set parent's left/right
-	    if (direction == 1) {
-	      parent->setRight(current->getLeft());
-	    }
-	    else if (direction == 0) {
-	      parent->setLeft(current->getLeft());
-	    }
+	  else if () {
+	    
 	  }
 	}
       }
     }
-    else {
-      // Recurse
-      if (current->getNum() < value) {
-	// Recursion to the right
-	if (current->getRight() != NULL) {
-	  direction = 1;
-	  remove(treeRoot, current->getRight(), current, direction, value);
-	}
-	else {
-	  cout << endl << "This number is not contained within the tree!" << endl << endl;
-	}
-      }
-      // Recursion to the left
-      else if (current->getNum() > value) {
-	if (current->getLeft() != NULL) {
-	  direction = 0;
-	  remove(treeRoot, current->getLeft(), current, direction, value);
-	}
-	else {
-	  cout << endl << "This number is not contained within the tree" << endl << endl;
-	}
-      }
-      }*/
+  }
 }
 
 // Rotations with help from Zayeed Saffat
@@ -455,17 +395,13 @@ void rightRotation(Node* &treeRoot, Node* newNode) {
   newNode->setParent(tempLeft);
 }
 
-// May not work....fix next class
-Node* replacement(Node* newNode) {
-  Node* replacement = newNode->getRight();
-  while (replacement->getLeft() != NULL) {
-    replacement = replacement->getLeft();
-  }
-  if (replacement->getParent()->getRight() != replacement) {
-    replacement->getParent()->setLeft(NULL);
+void replacement(Node* &newNode) {
+  if (newNode->getLeft() != NULL) {
+    newNode->setNum(newNode->getLeft()->getNum());
+    newNode->setLeft(NULL);
   }
   else {
-    replacement->getParent()->setRight(NULL);
+    newNode->setNum(newNode->getRight()->getNum());
+    newNode->setRight(NULL);
   }
-  return replacement;
 }
