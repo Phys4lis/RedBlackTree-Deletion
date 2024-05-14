@@ -12,9 +12,11 @@ void case5(Node* &treeRoot, Node* newNode);
 void print(Node* treeRoot, int level);
 void search(Node* treeRoot, int value, bool &contained);
 void remove(Node* &treeRoot, Node* current, int value);
+void case3D(Node* &treeRoot, Node* current);
 void leftRotation(Node* &treeRoot, Node* newNode);
 void rightRotation(Node* &treeRoot, Node* newNode);
 void replacement(Node* &newNode);
+void doubleBlack(Node* &treeRoot, Node* current);
 int correctInput();
 
 
@@ -49,7 +51,8 @@ int main() {
 	    Node* newNode = new Node(input[i]);
 	    add(treeRoot, treeRoot, newNode);
 	    fixTree(treeRoot, newNode);
-	  }
+	  }   replacement(current);
+
 	  looping2 = false;
 	}
 	// Add numbers through the console
@@ -222,6 +225,11 @@ void case5(Node* &treeRoot, Node* newNode) {
   if (newNode->getParent()->getParent()->getLeft() == newNode->getParent() && newNode->getParent()->getLeft() == newNode) {
     // Right rotation
     rightRotation(treeRoot, newNode->getParent()->getParent());
+    // FIX THIS CHANGE IT SO IT SWITCHES PARENT AND GRANDPARENT
+    Node* tempNode = current->getParent();
+    current->getParent()->setColor(current->getSibling()->getColor());
+    current->getSibling()->setColor(tempNode->getColor());
+
     newNode->getParent()->getParent()->setColor('R');
     newNode->getParent()->setColor('B');
   }
@@ -330,26 +338,15 @@ void remove(Node* &treeRoot, Node* current, int value) {
 	// Double black
 	else {
 	  replacement(current);
-	  // Case 2: Sibling is Red
-	  if (current->getSibling()->getColor() == 'R') {
-	    if (current->getParent()->getLeft() == current) {
-	      leftRotation(treeRoot, current->getParent());
-	    }
-	    else {
-	      rightRotation(treeRoot, current->getParent());
-	    }
-	    Node* tempNode = current->getParent();
-	    current->getParent()->setColor(current->getSibling()->getColor());
-	    current->getSibling()->setColor(tempNode->getColor());
-	    // NEED TO CALL CASE 3 HERE....IN OTHER WORDS, MAKE FUNCTIONS FOR CASES
-	  }
-	  else if () {
-	    
-	  }
+	  doubleBlack(treeRoot, current);
 	}
       }
     }
   }
+}
+
+void case3D(Node* &treeRoot, Node* current) {
+  
 }
 
 // Rotations with help from Zayeed Saffat
@@ -403,5 +400,52 @@ void replacement(Node* &newNode) {
   else {
     newNode->setNum(newNode->getRight()->getNum());
     newNode->setRight(NULL);
+  }
+}
+
+void doubleBlack(Node* &treeRoot, Node* current) {
+  // Case 1: Node is root
+  if (current == treeRoot) {
+    current->setColor('B');
+  }
+  // Case 2: Sibling is Red
+  if (current->getSibling()->getColor() == 'R') {
+    if (current->getParent()->getLeft() == current) {
+      leftRotation(treeRoot, current->getParent());
+    }
+    else {
+      rightRotation(treeRoot, current->getParent());
+    }
+    // Switch parent and sibling color
+    Node* tempNode = current->getParent();
+    current->getParent()->setColor(current->getSibling()->getColor());
+    current->getSibling()->setColor(tempNode->getColor());
+    //case3D(treeRoot, current);
+    // Call case 3 if necessary
+    if (current->getSibling()->getColor() == 'B') {
+      current->getSibling()->setColor('R');
+      doubleBlack(treeRoot, current->getParent());
+    }
+  }
+  // Case 3: Sibling is black
+  else if (current->getSibling()->getColor() == 'B') {
+    current->getSibling()->setColor('R');
+    doubleBlack(treeRoot, current->getParent());
+  }
+  // Case 4: Parent is red, sibling and its children are black 
+  else if (current->getParent()->getColor() == 'R' && current->getSibling()->getColor() == 'B' && current->getSibling()->getLeft()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'B') {
+    current->getParent()->setColor('B');
+    current->getSibling()->setColor('R');
+  }
+  // Case 5: Sibling left nodes are black and sibling right nodes are red, or vice versa.
+  else if (current->getSibling()->getColor() == 'B' && current->getParent()->getRight() == current && current->getSibling()->getLeft()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'R') {
+    leftRotation(treeRoot, current->getSibling());
+    current->getSibling()->setColor('R');
+    current->getSibling()->getLeft()->setColor('B');
+  }
+  else if (current->getSibling()->getColor() == 'B' && current->getParent()->getLeft() == current && current->getSibling()->getLeft()->getColor() == 'R' && current->getSibling()->getRight()->getColor() == 'B') {
+    rightRotation(treeRoot, current->getSibling());
+    current->getSibling()->setColor('R');
+    current->getSibling()->getRight()->setColor('B');
   }
 }
