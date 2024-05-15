@@ -15,7 +15,7 @@ void remove(Node* &treeRoot, Node* current, int value);
 void case3D(Node* &treeRoot, Node* current);
 void leftRotation(Node* &treeRoot, Node* newNode);
 void rightRotation(Node* &treeRoot, Node* newNode);
-void replacement(Node* &newNode);
+void replace(Node* &newNode);
 void doubleBlack(Node* &treeRoot, Node* current);
 int correctInput();
 
@@ -51,7 +51,7 @@ int main() {
 	    Node* newNode = new Node(input[i]);
 	    add(treeRoot, treeRoot, newNode);
 	    fixTree(treeRoot, newNode);
-	  }   replacement(current);
+	  }
 
 	  looping2 = false;
 	}
@@ -225,20 +225,17 @@ void case5(Node* &treeRoot, Node* newNode) {
   if (newNode->getParent()->getParent()->getLeft() == newNode->getParent() && newNode->getParent()->getLeft() == newNode) {
     // Right rotation
     rightRotation(treeRoot, newNode->getParent()->getParent());
-    // FIX THIS CHANGE IT SO IT SWITCHES PARENT AND GRANDPARENT
-    Node* tempNode = current->getParent();
-    current->getParent()->setColor(current->getSibling()->getColor());
-    current->getSibling()->setColor(tempNode->getColor());
-
-    newNode->getParent()->getParent()->setColor('R');
-    newNode->getParent()->setColor('B');
+    char tempColor = newNode->getParent()->getColor();
+    newNode->getParent()->setColor(newNode->getSibling()->getColor());
+    newNode->getSibling()->setColor(tempColor);
   }
   // Parent is right and node is right
   else if (newNode->getParent()->getParent()->getRight() == newNode->getParent() && newNode->getParent()->getRight() == newNode) {
     // Left Rotation
     leftRotation(treeRoot, newNode->getParent()->getParent());
-    newNode->getParent()->getParent()->setColor('R');
-    newNode->getParent()->setColor('B');    
+    char tempColor = newNode->getParent()->getColor();
+    newNode->getParent()->setColor(newNode->getSibling()->getColor());
+    newNode->getSibling()->setColor(tempColor);
   }
 }
 
@@ -316,28 +313,32 @@ void remove(Node* &treeRoot, Node* current, int value) {
 	  replacement = replacement->getLeft();
 	}
 	if (replacement->getParent()->getRight() != replacement) {
-	  replacement->getParent()->setLeft(NULL);
+	  if (replacement->getRight() != NULL) {
+	    replacement->getParent()->setLeft(replacement->getRight());
+	  }
+	  else {
+	    replacement->getParent()->setLeft(NULL);
+	  }
 	}
 	else {
 	  replacement->getParent()->setRight(replacement->getRight());
 	}
 	current->setNum(replacement->getNum());
-	replacement = NULL;
       }
       // One child
       else {
 	// Deleted node is red
 	if (current->getColor() == 'R') {
-	  replacement(current);
+	  replace(current);
 	  current->setColor('B');
 	}
 	// Child is red
-	else if ((current->getLeft()->getColor() == 'R' && current->getLeft() != NULL) || (current->getRight()->getColor() == 'R' && current->getRight() != NULL)) {
-	  replacement(current);
+	else if ((current->getLeft() != NULL && current->getLeft()->getColor() == 'R') || ( current->getRight() != NULL && current->getRight()->getColor() == 'R')) {
+	  replace(current);
 	}
 	// Double black
 	else {
-	  replacement(current);
+	  replace(current);
 	  doubleBlack(treeRoot, current);
 	}
       }
@@ -392,7 +393,7 @@ void rightRotation(Node* &treeRoot, Node* newNode) {
   newNode->setParent(tempLeft);
 }
 
-void replacement(Node* &newNode) {
+void replace(Node* &newNode) {
   if (newNode->getLeft() != NULL) {
     newNode->setNum(newNode->getLeft()->getNum());
     newNode->setLeft(NULL);
@@ -404,6 +405,7 @@ void replacement(Node* &newNode) {
 }
 
 void doubleBlack(Node* &treeRoot, Node* current) {
+  cout << "DOUBLE BLACK" << endl;
   // Case 1: Node is root
   if (current == treeRoot) {
     current->setColor('B');
@@ -417,9 +419,9 @@ void doubleBlack(Node* &treeRoot, Node* current) {
       rightRotation(treeRoot, current->getParent());
     }
     // Switch parent and sibling color
-    Node* tempNode = current->getParent();
+    char tempColor = current->getParent()->getColor();
     current->getParent()->setColor(current->getSibling()->getColor());
-    current->getSibling()->setColor(tempNode->getColor());
+    current->getSibling()->setColor(tempColor);
     //case3D(treeRoot, current);
     // Call case 3 if necessary
     if (current->getSibling()->getColor() == 'B') {
@@ -447,5 +449,20 @@ void doubleBlack(Node* &treeRoot, Node* current) {
     rightRotation(treeRoot, current->getSibling());
     current->getSibling()->setColor('R');
     current->getSibling()->getRight()->setColor('B');
+  }
+  // Case 6: Sibling is black and sibling's left/right child is red with node being right/left.
+  else if (current->getSibling()->getColor() == 'B' && current->getSibling()->getLeft()->getColor() == 'R' && current->getParent()->getRight() == current) {
+    rightRotation(treeRoot, current->getParent());    
+    char tempColor = current->getParent()->getColor();
+    current->getParent()->setColor(current->getSibling()->getColor());
+    current->getSibling()->setColor(tempColor);
+    current->getParent()->getParent()->getLeft()->setColor('B');
+  }
+  else if (current->getSibling()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'R' && current->getParent()->getLeft() == current) {
+    leftRotation(treeRoot, current->getParent());
+    char tempColor = current->getParent()->getColor();
+    current->getParent()->setColor(current->getSibling()->getColor());
+    current->getSibling()->setColor(tempColor);
+    current->getParent()->getParent()->getRight()->setColor('B');
   }
 }
