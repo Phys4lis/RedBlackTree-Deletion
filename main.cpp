@@ -298,13 +298,16 @@ void remove(Node* &treeRoot, Node* current, int value) {
     else {
       // No children
       if (current->getLeft() == NULL && current->getRight() == NULL) {
+	if (current->getColor() == 'B') {
+	  doubleBlack(treeRoot, current);
+	}
 	if (current->getParent()->getLeft() == current) {
 	  current->getParent()->setLeft(NULL);
 	}
 	else {
 	  current->getParent()->setRight(NULL);
 	}
-	current == NULL;
+	current = NULL;
       }
       // Two children
       else if (current->getLeft() != NULL && current->getRight() != NULL) {
@@ -312,18 +315,8 @@ void remove(Node* &treeRoot, Node* current, int value) {
 	while (replacement->getLeft() != NULL) {
 	  replacement = replacement->getLeft();
 	}
-	if (replacement->getParent()->getRight() != replacement) {
-	  if (replacement->getRight() != NULL) {
-	    replacement->getParent()->setLeft(replacement->getRight());
-	  }
-	  else {
-	    replacement->getParent()->setLeft(NULL);
-	  }
-	}
-	else {
-	  replacement->getParent()->setRight(replacement->getRight());
-	}
 	current->setNum(replacement->getNum());
+	remove(treeRoot, replacement, replacement->getNum()); 
       }
       // One child
       else {
@@ -407,11 +400,13 @@ void replace(Node* &newNode) {
 void doubleBlack(Node* &treeRoot, Node* current) {
   cout << "DOUBLE BLACK" << endl;
   // Case 1: Node is root
+  cout << "case 1" << endl;
   if (current == treeRoot) {
     current->setColor('B');
   }
   // Case 2: Sibling is Red
-  if (current->getSibling()->getColor() == 'R') {
+  else if (current->getSibling()->getColor() == 'R') {
+    cout << "inside case 2" << endl;
     if (current->getParent()->getLeft() == current) {
       leftRotation(treeRoot, current->getParent());
     }
@@ -429,8 +424,9 @@ void doubleBlack(Node* &treeRoot, Node* current) {
       doubleBlack(treeRoot, current->getParent());
     }
   }
-  // Case 3: Sibling is black
-  else if (current->getSibling()->getColor() == 'B') {
+  // Case 3: Parent is black, sibling and its children are black
+  else if (current->getParent()->getColor() == 'B' && current->getSibling()->getColor() == 'B' && current->getSibling()->getLeft()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'B') {
+    cout << "case 3" << endl;
     current->getSibling()->setColor('R');
     doubleBlack(treeRoot, current->getParent());
   }
