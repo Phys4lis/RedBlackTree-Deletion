@@ -326,7 +326,7 @@ void remove(Node* &treeRoot, Node* current, int value) {
 	  current->setColor('B');
 	}
 	// Child is red
-	else if ((current->getLeft() != NULL && current->getLeft()->getColor() == 'R') || ( current->getRight() != NULL && current->getRight()->getColor() == 'R')) {
+	else if ((current->getLeft() != NULL && current->getLeft()->getColor() == 'R') || (current->getRight() != NULL && current->getRight()->getColor() == 'R')) {
 	  replace(current);
 	}
 	// Double black
@@ -400,7 +400,6 @@ void replace(Node* &newNode) {
 void doubleBlack(Node* &treeRoot, Node* current) {
   cout << "DOUBLE BLACK" << endl;
   // Case 1: Node is root
-  cout << "case 1" << endl;
   if (current == treeRoot) {
     current->setColor('B');
   }
@@ -425,40 +424,73 @@ void doubleBlack(Node* &treeRoot, Node* current) {
     }
   }
   // Case 3: Parent is black, sibling and its children are black
-  else if (current->getParent()->getColor() == 'B' && current->getSibling()->getColor() == 'B' && current->getSibling()->getLeft()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'B') {
+  else if (current->getParent()->getColor() == 'B' && current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() == NULL || current->getSibling()->getLeft()->getColor() == 'B') && (current->getSibling()->getRight() == NULL || current->getSibling()->getRight()->getColor() == 'B')) {
     cout << "case 3" << endl;
     current->getSibling()->setColor('R');
     doubleBlack(treeRoot, current->getParent());
   }
   // Case 4: Parent is red, sibling and its children are black 
-  else if (current->getParent()->getColor() == 'R' && current->getSibling()->getColor() == 'B' && current->getSibling()->getLeft()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'B') {
+  if (current->getParent()->getColor() == 'R' && current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() == NULL || current->getSibling()->getLeft()->getColor() == 'B') && (current->getSibling()->getRight() == NULL || current->getSibling()->getRight()->getColor() == 'B')) {
+    cout << "case 4" << endl;
     current->getParent()->setColor('B');
     current->getSibling()->setColor('R');
   }
+
+
+  
+  // MAKE SURE CHILDREN AREN'T NULL IN  LEFT AND RIGHT
+
+
+  
   // Case 5: Sibling left nodes are black and sibling right nodes are red, or vice versa.
-  else if (current->getSibling()->getColor() == 'B' && current->getParent()->getRight() == current && current->getSibling()->getLeft()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'R') {
+  else if (current->getSibling()->getColor() == 'B' && current->getParent()->getRight() == current && (current->getSibling()->getLeft() == NULL || current->getSibling()->getLeft()->getColor() == 'B') && (current->getSibling()->getRight() != NULL && current->getSibling()->getRight()->getColor() == 'R')) {
+    cout << "case 5.1" << endl;
     leftRotation(treeRoot, current->getSibling());
-    current->getSibling()->setColor('R');
-    current->getSibling()->getLeft()->setColor('B');
-  }
-  else if (current->getSibling()->getColor() == 'B' && current->getParent()->getLeft() == current && current->getSibling()->getLeft()->getColor() == 'R' && current->getSibling()->getRight()->getColor() == 'B') {
-    rightRotation(treeRoot, current->getSibling());
-    current->getSibling()->setColor('R');
-    current->getSibling()->getRight()->setColor('B');
-  }
-  // Case 6: Sibling is black and sibling's left/right child is red with node being right/left.
-  else if (current->getSibling()->getColor() == 'B' && current->getSibling()->getLeft()->getColor() == 'R' && current->getParent()->getRight() == current) {
-    rightRotation(treeRoot, current->getParent());    
+    current->getSibling()->getLeft()->setColor('R');
+    current->getSibling()->setColor('B');
+    // Transition into case 6
+    cout << "case 6.1" << endl;
+    rightRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
-    current->getParent()->setColor(current->getSibling()->getColor());
-    current->getSibling()->setColor(tempColor);
-    current->getParent()->getParent()->getLeft()->setColor('B');
+    current->getParent()->setColor(current->getParent()->getParent()->getColor());
+    current->getParent()->getParent()->setColor(tempColor);
+    current->getParent()->getSibling()->setColor('B');
   }
-  else if (current->getSibling()->getColor() == 'B' && current->getSibling()->getRight()->getColor() == 'R' && current->getParent()->getLeft() == current) {
+  else if (current->getSibling()->getColor() == 'B' && current->getParent()->getLeft() == current && (current->getSibling()->getLeft() != NULL && current->getSibling()->getLeft()->getColor() == 'R') && (current->getSibling()->getRight() == NULL || current->getSibling()->getRight()->getColor() == 'B')) {
+    cout << "case 5.2" << endl;
+    rightRotation(treeRoot, current->getSibling());
+    int levelel = 1;
+    print(treeRoot, levelel);
+    current->getSibling()->getRight()->setColor('R');
+    current->getSibling()->setColor('B');
+    // Transition into case 6
+    cout << "case 6.2" << endl;
+    cout << "sibling color" << current->getSibling()->getColor() << endl;
     leftRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
-    current->getParent()->setColor(current->getSibling()->getColor());
-    current->getSibling()->setColor(tempColor);
-    current->getParent()->getParent()->getRight()->setColor('B');
+    current->getParent()->setColor(current->getParent()->getParent()->getColor());
+    current->getParent()->getParent()->setColor(tempColor);
+    current->getParent()->getSibling()->setColor('B');
+  }
+  // Case 6: Sibling is black and sibling's left/right child is red with node being right/left.
+  else if (current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() != NULL && current->getSibling()->getLeft()->getColor() == 'R') && current->getParent()->getRight() == current) {
+    cout << "case 6.1" << endl;
+    rightRotation(treeRoot, current->getParent());
+    char tempColor = current->getParent()->getColor();
+    current->getParent()->setColor(current->getParent()->getParent()->getColor());
+    current->getParent()->getParent()->setColor(tempColor);
+    current->getParent()->getSibling()->setColor('B');
+  }
+
+  // CODE IS SOMEHOW GOING INTO CASE 6.2
+  
+  else if (current->getSibling()->getColor() == 'B' && (current->getSibling()->getRight() != NULL && current->getSibling()->getRight()->getColor() == 'R') && current->getParent()->getLeft() == current) {
+    cout << "case 6.2" << endl;
+    cout << "sibling color" << current->getSibling()->getColor() << endl;
+    leftRotation(treeRoot, current->getParent());
+    char tempColor = current->getParent()->getColor();
+    current->getParent()->setColor(current->getParent()->getParent()->getColor());
+    current->getParent()->getParent()->setColor(tempColor);
+    current->getParent()->getSibling()->setColor('B');
   }
 }
