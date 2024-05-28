@@ -458,6 +458,7 @@ void doubleBlack(Node* &treeRoot, Node* current) {
   }
   // Case 6: Sibling is black and sibling's left/right child is red with node being right/left.
   else if (current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() != NULL && current->getSibling()->getLeft()->getColor() == 'R') && current->getParent()->getRight() == current) {
+    // Rotate then change color
     rightRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
     current->getParent()->setColor(current->getParent()->getParent()->getColor());
@@ -465,6 +466,7 @@ void doubleBlack(Node* &treeRoot, Node* current) {
     current->getParent()->getSibling()->setColor('B');
   }
   else if (current->getSibling()->getColor() == 'B' && (current->getSibling()->getRight() != NULL && current->getSibling()->getRight()->getColor() == 'R') && current->getParent()->getLeft() == current) {
+    // Rotate then change color
     leftRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
     current->getParent()->setColor(current->getParent()->getParent()->getColor());
