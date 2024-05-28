@@ -52,7 +52,6 @@ int main() {
 	    add(treeRoot, treeRoot, newNode);
 	    fixTree(treeRoot, newNode);
 	  }
-
 	  looping2 = false;
 	}
 	// Add numbers through the console
@@ -281,6 +280,7 @@ void search(Node* treeRoot, int value, bool &contained) {
 }
 
 void remove(Node* &treeRoot, Node* current, int value) {
+  bool noChildren = false;
   if (treeRoot == NULL) {
     cout << "The tree is empty!" << endl << endl;
     return;
@@ -298,9 +298,11 @@ void remove(Node* &treeRoot, Node* current, int value) {
     else {
       // No children
       if (current->getLeft() == NULL && current->getRight() == NULL) {
+	// Double black to fix tree
 	if (current->getColor() == 'B') {
 	  doubleBlack(treeRoot, current);
 	}
+	// Fix parents
 	if (current->getParent()->getLeft() == current) {
 	  current->getParent()->setLeft(NULL);
 	}
@@ -311,6 +313,7 @@ void remove(Node* &treeRoot, Node* current, int value) {
       }
       // Two children
       else if (current->getLeft() != NULL && current->getRight() != NULL) {
+	// Find replacement
 	Node* replacement = current->getRight();
 	while (replacement->getLeft() != NULL) {
 	  replacement = replacement->getLeft();
@@ -339,10 +342,6 @@ void remove(Node* &treeRoot, Node* current, int value) {
   }
 }
 
-void case3D(Node* &treeRoot, Node* current) {
-  
-}
-
 // Rotations with help from Zayeed Saffat
 void leftRotation(Node* &treeRoot, Node* newNode) {
   Node* tempRight = newNode->getRight();
@@ -353,6 +352,7 @@ void leftRotation(Node* &treeRoot, Node* newNode) {
   if (newNode == treeRoot) {
     treeRoot = tempRight;
   }
+  // Fix parent children links
   else if (newNode->getParent()->getLeft() == newNode) {
     newNode->getParent()->setLeft(tempRight);
     tempRight->setParent(newNode->getParent());
@@ -374,6 +374,7 @@ void rightRotation(Node* &treeRoot, Node* newNode) {
   if (newNode == treeRoot) {
     treeRoot = tempLeft;
   }
+  // Fix parent children links
   else if (newNode->getParent()->getRight() == newNode) {
     newNode->getParent()->setRight(tempLeft);
     tempLeft->setParent(newNode->getParent());
@@ -387,6 +388,7 @@ void rightRotation(Node* &treeRoot, Node* newNode) {
 }
 
 void replace(Node* &newNode) {
+  // Find the child to replace node
   if (newNode->getLeft() != NULL) {
     newNode->setNum(newNode->getLeft()->getNum());
     newNode->setLeft(NULL);
@@ -398,14 +400,12 @@ void replace(Node* &newNode) {
 }
 
 void doubleBlack(Node* &treeRoot, Node* current) {
-  cout << "DOUBLE BLACK" << endl;
   // Case 1: Node is root
   if (current == treeRoot) {
     current->setColor('B');
   }
   // Case 2: Sibling is Red
   else if (current->getSibling()->getColor() == 'R') {
-    cout << "inside case 2" << endl;
     if (current->getParent()->getLeft() == current) {
       leftRotation(treeRoot, current->getParent());
     }
@@ -414,42 +414,30 @@ void doubleBlack(Node* &treeRoot, Node* current) {
     }
     // Switch parent and sibling color
     char tempColor = current->getParent()->getColor();
-    current->getParent()->setColor(current->getSibling()->getColor());
-    current->getSibling()->setColor(tempColor);
-    //case3D(treeRoot, current);
+    current->getParent()->setColor(current->getParent()->getParent()->getColor());
+    current->getParent()->getParent()->setColor(tempColor);
     // Call case 3 if necessary
-    if (current->getSibling()->getColor() == 'B') {
-      current->getSibling()->setColor('R');
-      doubleBlack(treeRoot, current->getParent());
+    if (current != NULL && current->getSibling() != NULL && current->getSibling()->getColor() == 'B') {
+      doubleBlack(treeRoot, current);
     }
   }
   // Case 3: Parent is black, sibling and its children are black
   else if (current->getParent()->getColor() == 'B' && current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() == NULL || current->getSibling()->getLeft()->getColor() == 'B') && (current->getSibling()->getRight() == NULL || current->getSibling()->getRight()->getColor() == 'B')) {
-    cout << "case 3" << endl;
     current->getSibling()->setColor('R');
     doubleBlack(treeRoot, current->getParent());
   }
   // Case 4: Parent is red, sibling and its children are black 
-  if (current->getParent()->getColor() == 'R' && current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() == NULL || current->getSibling()->getLeft()->getColor() == 'B') && (current->getSibling()->getRight() == NULL || current->getSibling()->getRight()->getColor() == 'B')) {
-    cout << "case 4" << endl;
+  else if (current->getParent()->getColor() == 'R' && current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() == NULL || current->getSibling()->getLeft()->getColor() == 'B') && (current->getSibling()->getRight() == NULL || current->getSibling()->getRight()->getColor() == 'B')) {
     current->getParent()->setColor('B');
     current->getSibling()->setColor('R');
-  }
-
-
-  
-  // MAKE SURE CHILDREN AREN'T NULL IN  LEFT AND RIGHT
-
-
-  
+  }  
   // Case 5: Sibling left nodes are black and sibling right nodes are red, or vice versa.
   else if (current->getSibling()->getColor() == 'B' && current->getParent()->getRight() == current && (current->getSibling()->getLeft() == NULL || current->getSibling()->getLeft()->getColor() == 'B') && (current->getSibling()->getRight() != NULL && current->getSibling()->getRight()->getColor() == 'R')) {
-    cout << "case 5.1" << endl;
+    // Rotate then change color
     leftRotation(treeRoot, current->getSibling());
     current->getSibling()->getLeft()->setColor('R');
     current->getSibling()->setColor('B');
     // Transition into case 6
-    cout << "case 6.1" << endl;
     rightRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
     current->getParent()->setColor(current->getParent()->getParent()->getColor());
@@ -457,15 +445,11 @@ void doubleBlack(Node* &treeRoot, Node* current) {
     current->getParent()->getSibling()->setColor('B');
   }
   else if (current->getSibling()->getColor() == 'B' && current->getParent()->getLeft() == current && (current->getSibling()->getLeft() != NULL && current->getSibling()->getLeft()->getColor() == 'R') && (current->getSibling()->getRight() == NULL || current->getSibling()->getRight()->getColor() == 'B')) {
-    cout << "case 5.2" << endl;
+    // Rotate then change color
     rightRotation(treeRoot, current->getSibling());
-    int levelel = 1;
-    print(treeRoot, levelel);
     current->getSibling()->getRight()->setColor('R');
     current->getSibling()->setColor('B');
     // Transition into case 6
-    cout << "case 6.2" << endl;
-    cout << "sibling color" << current->getSibling()->getColor() << endl;
     leftRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
     current->getParent()->setColor(current->getParent()->getParent()->getColor());
@@ -474,19 +458,13 @@ void doubleBlack(Node* &treeRoot, Node* current) {
   }
   // Case 6: Sibling is black and sibling's left/right child is red with node being right/left.
   else if (current->getSibling()->getColor() == 'B' && (current->getSibling()->getLeft() != NULL && current->getSibling()->getLeft()->getColor() == 'R') && current->getParent()->getRight() == current) {
-    cout << "case 6.1" << endl;
     rightRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
     current->getParent()->setColor(current->getParent()->getParent()->getColor());
     current->getParent()->getParent()->setColor(tempColor);
     current->getParent()->getSibling()->setColor('B');
   }
-
-  // CODE IS SOMEHOW GOING INTO CASE 6.2
-  
   else if (current->getSibling()->getColor() == 'B' && (current->getSibling()->getRight() != NULL && current->getSibling()->getRight()->getColor() == 'R') && current->getParent()->getLeft() == current) {
-    cout << "case 6.2" << endl;
-    cout << "sibling color" << current->getSibling()->getColor() << endl;
     leftRotation(treeRoot, current->getParent());
     char tempColor = current->getParent()->getColor();
     current->getParent()->setColor(current->getParent()->getParent()->getColor());
